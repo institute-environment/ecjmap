@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<title>Hidden Disparities</title>
+  
+
+    <!--Load the Leaflet CSS file -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <!--Load the Leaflet JavaScript file -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+     
+  <style>
+      body{
+			font-family: Arial; }
+			
+	  .info { padding: 6px 8px; 
+              font: 14px/16px Arial, Helvetica, sans-serif; 
+              background: white; 
+              background: rgba(255,255,255,0.8); 
+              box-shadow: 0 0 15px rgba(0,0,0,0.2); 
+              border-radius: 5px; } 
+      
+      .info h4 { margin: 0 0 5px; color: #777; }
+      
+      .legend {text-align: left; 
+               line-height: 18px;
+               color: #555; } 
+      
+      .legend i { width: 18px; 
+                  height: 18px; 
+                  float: left; 
+                  margin-right: 8px; 
+                  opacity: 0.9; }
+  .collapsible {
+  background-color: #4F7094;
+  color: white;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border-style: solid;
+  border-color: white;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+.active, .collapsible:hover {
+  background-color: #033266;
+}
+
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+
+.hangingindent {
+  padding-left: 22px ;
+  text-indent: -22px ;
+}
+  
+  </style>
+	
+</head>
+
+<body>
+    <h1>Hidden Disparities</h1>
+    An interactive mapping tool to illuminate hidden disparities in
+    California's rural North State. 
+
+
+    <div id="mapid" style="width: 900px; height: 800px;"></div>
+
+    <script src="layers/superfund_sites.js" type="text/javascript"></script>
+    <script src="layers/brownfields.js" type="text/javascript"></script>
+    <script src="layers/mines.js" type="text/javascript"></script>
+
+
+    <script src="layers/mercury_lines.js" type="text/javascript"></script>
+    <script src="layers/mercury_polygons.js" type="text/javascript"></script>
+
+    <script src="layers/north_state_region.js" type="text/javascript"></script>
+    <script src="layers/ca-jobs-first_regions.js" type="text/javascript"></script>
+
+    <!--<script src="layers/fire_risk.js" type="text/javascript"></script> -->
+    <script src="layers/burn_probability_10yrs.js" type="text/javascript"></script>
+    
+    <script src="layers/transit.js" type="text/javascript"></script>
+
+    <script src="layers/poverty.js" type="text/javascript"></script>
+
+    <script src="layers/native_tracts_highpop.js" type="text/javascript"></script>
+    <script src="layers/native_boundary_highpop.js" type="text/javascript"></script>
+
+    <script src="layers/tribal_areas.js" type="text/javascript"></script>
+    <script src="layers/tribal_boundary.js" type="text/javascript"></script>
+
+    <script src="layers/primary_care_geo.js" type="text/javascript"></script>
+    <script src="layers/primary_care_pop.js" type="text/javascript"></script>
+
+    <script src="layers/heating_fuel_source.js" type="text/javascript"></script>
+
+    <script src="leaflet.pattern-src.js" type="text/javascript"></script>
+
+    <script>
+        //Now we are in javascript
+
+        // Create Map ------------------------------------------------------
+        
+        //create empty map called ejmap centered on northern california
+        var ejmap = L.map('mapid', {
+            center: [38.8175186, -121.7870873],
+            zoom: 7
+        })
+
+        // Base Map Section -------------------------------------------------
+
+        //create basemap
+        //var osm_basemap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.{ext}', {
+        //    attribution:  '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        //    subdomains: 'abcd',
+        //    minZoom: 0,
+        //    maxZoom: 20,
+        //    ext: 'png'
+        //}).addTo(ejmap);
+		
+			
+		//basemap option: USGS Topo
+		var USGS_USTopo = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', {
+			maxZoom: 16,
+			opacity: .5, // make the base map appear less saturated
+			attribution: 'Tiles courtesy of the <a href="https://usgs.gov/">U.S. Geological Survey</a>'
+			}).addTo(ejmap);
+        
+        //ejmap.addLayer(osm_basemap);
+        
+        //create alternate basemap
+        var osm_topo =  L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+	          subdomains: 'abcd',
+            minZoom: 0,
+            maxZoom: 20,
+            ext: 'png', 
+	          attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+        });
+
+
+        // Example of tooltip -----------------------------------------------
+        
+        //add marker for quad with tooltip
+            //Quad coordinates: 38.541162, -121.749371
+        //var marker = new L.marker([38.541162, -121.749371], {
+        //    opacity: 1.0
+        //});
+        //marker.bindTooltip("<b>Quad</b>", {});
+        //marker.addTo(ejmap)
+
+        // Burn Risk Section -------------------------------------------------
+        
+        //function to get colors by fire risk level
+        function get_fire_color(v) {
+          return v > 0.6 ? "#bd0026" :
+                 v > 0.5 ? "#f03b20" :
+                 v > 0.4 ? "#fd8d3c" :
+                 v > 0.3 ? "#feb24c" :
+                           "#fed976" ;
+        }
+        
+        //function to style fire risk polygons using fire colors
+        function fire_style(feature) {
+          return {
+            fillColor: get_fire_color(feature.properties.burn_prob),
+            color: null,
+            fillOpacity: 0.5
+          };
+        }
+        
+        //create fire risk layer
+        var fire_layer = L.geoJSON(fire, { style: fire_style });
+
+        //create empty fire risk layer legend
+        var fire_legend = L.control({position: 'topleft'});
+        
+        //add colors, levels, and title to fire risk legend
+        fire_legend.onAdd = function(map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+              levels = [0.2, 0.3, 0.4, 0.5, 0.6],
+              labels = ['<strong> 10 Year Burn Probability </strong>'];
+              
+          // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < levels.length; i++) {
+                
+                labels.push(
+                  '<i style="background:' + get_fire_color(levels[i]+0.01) + 
+                  '"></i> ' + (levels[i]*100 + "%") + (levels[i + 1] ? '&ndash;' + (levels[i + 1]*100 + "%" ) + '' : '+')
+                );
+                  
+            }
+            
+            div.innerHTML = labels.join('<br>');
+            return div;
+          
+        };
+        
+        // Percent of people living below the poverty line --------------------
+        
+        function get_pov_color(v) {
+          return v > 20 ? "#54278f" :
+                          "#807dba" ;
+        } 
+        
+        function poverty_style(feature) {
+          return {
+            fillColor: get_pov_color(feature.properties.est),
+            color: null,
+            fillOpacity: 0.7
+          };
+        }
+
+        //create high poverty layer
+        var poverty_layer = L.geoJSON(poverty, { style: poverty_style });
+
+        //create empty high poverty layer legend
+        var pov_legend = L.control({position: 'bottomleft'});
+        
+        //add colors, levels, and title to high poverty legend
+        pov_legend.onAdd = function(map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+              levels = [25, 15]
+              legend_labs = ['>20% living below poverty line',
+                            'Confidence interval includes >20%<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;living below poverty line'],
+              labels = ['<strong> Poverty Level </strong>'];
+              
+          // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < levels.length; i++) {
+                
+                labels.push(
+                  '<i style="background:' + get_pov_color(levels[i]) + 
+                  '"></i> ' + legend_labs[i]
+                );
+                  
+            }
+            
+            div.innerHTML = labels.join('<br>');
+            return div;
+          
+        };
+
+        // Indigenous functions -----------------------------------------------
+        function get_indigenous_color(v) {
+          return v == "federal" ? "#543005" :
+                                  "#8c510a" ;
+        } 
+
+        //style for indigenous data
+        function indigenous_style(feature) {
+          //if you change the fill color, you need to change it in indigenous_legend
+
+          col = get_indigenous_color(feature.properties.source)
+          wgt = 2 //line weight
+
+          if (feature.geometry.type.includes('Line')) {
+
+            return{
+              color: col, //"#543005",
+              weight: wgt
+            };  
+
+          } else {
+
+            return{
+              fillColor: col,  
+              color: col, //"#543005",
+              fillOpacity: 0.2,
+              weight: wgt
+            };   
+
+          }
+          
+        }
+
+
+        // Indigenous Legend --------------------------------------------------
+
+        //create empty Indigenous land layer legend
+        var indigenous_legend = L.control({position: 'bottomleft'});
+        
+        //add colors, levels, and title to indigenous land legend
+        indigenous_legend.onAdd = function(map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+              indigenous_srcs = ['federal', 'census_highpop']
+              color_labs = ['Federally recognized tribal land',
+                            'Top 10% of census tracts by<br>' +
+                            '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' +
+                            'Native identifying population'],
+              labels = ['<strong>Indigenous Land</strong>'];
+              
+          // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < indigenous_srcs.length; i++) {
+
+                bcol = '#543005'
+                
+                labels.push(
+                  '<i style="border-color:'+ bcol + '; background:' + 
+                  get_indigenous_color(indigenous_srcs[i]) + 
+                  '"></i> ' + color_labs[i]
+                );
+                  
+            }
+            
+            div.innerHTML = labels.join('<br>');
+            return div;
+          
+        };
+
+
+        // Federally recognized Tribal Land -----------------------------------
+
+        var tribal_layer = new L.geoJSON(tribal, {
+          style: indigenous_style,
+        
+          onEachFeature: function(feature, layer) {
+            layer.bindPopup("<u>Federally Recognized Tribal Area</u>" +
+                            "<br><b>Name: </b>" + feature.properties.name + 
+                            "<br><b>Land Type: </b>" + feature.properties.land_type )
+          } 
+        
+        })
+
+        var tribal_lines = new L.geoJSON(tribal_boundary, {
+          style: indigenous_style,
+        
+          onEachFeature: function(feature, layer) {
+            layer.bindPopup("<u>Federally Recognized Tribal Area</u>" +
+                            "<br><b>Name: </b>" + feature.properties.name + 
+                            "<br><b>Land Type: </b>" + feature.properties.land_type )
+          } 
+        
+        })
+
+        
+
+        // Native Land -------------------------------------------------------
+
+        var native_layer = new L.geoJSON(native_lands, {style: indigenous_style})
+        var native_lines = new L.geoJSON(native_boundary, {style: indigenous_style})
+
+
+        // Primary Care Provider Shortage: Geo --------------------------------
+
+        pc_cols = ["#084594", "#4292c6", "#9ecae1"]
+
+        //function to get colors by shortage score
+        function get_pc_color(v) {
+          return v > 15 ?  pc_cols[0]:
+                 v > 9 ?   pc_cols[1]:
+                           pc_cols[2];
+        }
+
+        //function to style primary care provider polygons using shortage score
+        //colors
+        function primary_care_geo_style(feature) {
+          return {
+            fillColor: get_pc_color(feature.properties.score),
+            color: null,
+            fillOpacity: 0.7
+          };
+        }
+
+        var pc_geo_layer = L.geoJSON(pc_geo, { 
+          style: primary_care_geo_style,
+        
+          onEachFeature: function(feature, layer) {
+            layer.bindPopup("<u>Healthcare Provider Shortage Area</u>" +
+                            "<br><b>Population: </b>" + feature.properties.pop_type + 
+                            "<br><b>Shortage Severity Score: </b>" + feature.properties.score + 
+                            "<br><b>Full Time Worker Shortage: </b>" + feature.properties.fte_short)
+          } 
+        
+        });
+
+        //create empty primary care legend
+        var pc_legend = L.control({position: 'bottomleft'});
+
+        //add colors levels and titles to primary care legend
+        pc_legend.onAdd = function(map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+              levels = [0, 9, 15, 25],
+              labels = ['<strong>Provider Shortage Score</strong>'];
+              
+          // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < levels.length-1; i++) {
+                
+                levels_1 = levels[i]+1
+
+                labels.push(
+                  '<i style="background:' + get_pc_color(levels[i] + 1) +
+                  '"></i> ' + levels_1 + '&ndash;' + levels[i + 1]
+                );
+                  
+            }
+            
+            div.innerHTML = labels.join('<br>');
+            return div;
+          
+        };
+
+        // Primary Care Provider Shortage: Population -------------------------
+
+        //create stripes
+
+        var stripes_high = new L.StripePattern({color:pc_cols[0], weight:5, spaceWeight:2, angle:135});
+        stripes_high.addTo(ejmap);
+
+        var stripes_mid = new L.StripePattern({color:pc_cols[1], weight:5, spaceWeight:2, angle:135});
+        stripes_mid.addTo(ejmap);
+
+        var stripes_low = new L.StripePattern({color:pc_cols[2], weight:5, spaceWeight:2, angle:135});
+        stripes_low.addTo(ejmap);
+
+        function get_pc_stripes(v) {
+          return v > 15 ?  stripes_high:
+                 v > 9 ?   stripes_mid:
+                            stripes_low;
+        }
+
+        //function to style primary care provider polygons using shortage score
+        //colors
+        function primary_care_pop_style(feature) {
+          return {
+            fillPattern: get_pc_stripes(feature.properties.score),
+            color: null,
+            fillOpacity: 0.7
+          };
+        }
+
+        //create primary care health care worker shortage layer
+        var pc_pop_layer = L.geoJSON(pc_pop, { 
+          style: primary_care_pop_style,
+        
+          onEachFeature: function(feature, layer) {
+            layer.bindPopup("<u>Healthcare Provider Shortage Area</u>" +
+                            "<br><b>Population: </b>" + feature.properties.pop_type + 
+                            "<br><b>Shortage Severity Score: </b>" + feature.properties.score + 
+                            "<br><b>Full Time Worker Shortage: </b>" + feature.properties.fte_short)
+          } 
+        
+        });
+
+        var pc_layer = L.layerGroup([pc_geo_layer, pc_pop_layer])
+
+        // High Pollutant Heating Fuel ----------------------------------------
+
+        function as_perc(v) {
+          p = Math.round(v*100, 0) + '%'
+
+          return p
+        }
+
+        //function to get colors by fire risk level
+        function get_pollutant_color(v) {
+          
+          hex_col = "#e34a33"
+
+          return v == 100 ?       hex_col :
+                 v == 0 ?  hex_col + "00" :
+                              hex_col + v ;
+        }
+
+        //function to style heating fuel source polygons using % high pollutant
+        //fuel source
+        function fuel_style(feature) {
+          return {
+            fillColor: get_pollutant_color(100), //get_pollutant_color(feature.properties.high_pollutant),
+            color: null,
+            fillOpacity: feature.properties.high_pollutant
+          };
+        }
+
+        var fuel_layer = L.geoJSON(fuel, { 
+          style: fuel_style,
+        
+          onEachFeature: function(feature, layer) {
+            layer.bindPopup("<u>Heating Fuel for " + feature.properties.geom_name +"</u>" +
+                            "<br><b>High Pollutant Fuel: </b>" + as_perc(feature.properties.high_pollutant) + 
+                            "<br><b>Gas: </b>" + as_perc(feature.properties.gas) + 
+                            "<br><b>Electricity: </b>" + as_perc(feature.properties.electricity))
+          } 
+        
+        });
+
+        //create empty fire risk layer legend
+        var fuel_legend = L.control({position: 'bottomleft'});
+        
+        //add colors, levels, and title to fire risk legend
+        fuel_legend.onAdd = function(map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+              levels = [0, 25, 50, 75, 100],
+              labels = ['<strong>High Pollutant Heating Fuel</strong>'];
+              
+          // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < levels.length; i++) {
+                
+                labels.push(
+                  '<i style="background:' + get_pollutant_color(levels[i]) + 
+                  '"></i> ' + levels[i] + "%"
+                );
+                  
+            }
+            
+            div.innerHTML = labels.join('<br>');
+            return div;
+          
+        };
+
+        // Superfund locations ------------------------------------------------
+
+        get_superfund_color = function(status, score) {
+
+          return status.includes('Deleted') ? "#808080" :
+                 score > 45 ? "#ae017e" :
+                 score > 35 ? "#dd3497" :
+                          "#fa9fb5" ;
+
+        }
+
+        //create superfund locations layer
+        var superfund_points = L.geoJSON(superfund, {
+            pointToLayer: function(feature, latlng) {
+                return L.circleMarker(latlng, {
+                  fillColor: get_superfund_color(feature.properties.Status, 
+                                                 feature.properties.Site_Score),
+                  color: 'black',
+                  fillOpacity: 1,
+                  radius: 4,
+                  weight: 1
+                });
+            },
+            
+            //create superfund location pop-up
+            onEachFeature: function(feature, layer) {
+                layer.bindPopup("<u>Superfund Site</u>" +
+                                "<br><b>Name: </b>" + feature.properties.Site_Name + 
+                                "<br><b>Site Score: </b>" + feature.properties.Site_Score +
+                                "<br><b>Progress Profile: </b>" + feature.properties.Site_Progress_Profile +
+                                "<br><b>Status: </b>" + feature.properties.Status);
+            }
+        });
+
+        //create empty superfund legend
+        var superfund_legend = L.control({position: 'bottomleft'});
+
+        //add colors levels and titles to superfund legend
+        superfund_legend.onAdd = function(map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+              scores = [0, 35, 45, 50],
+              statuses = ['NPL Site', 'NPL Site', 'NPL Site', 'Deleted NPL Site']
+              col_labs = ['0-35', '35-45', '45+', 'Active remediation over']
+              labels = ['<strong>Superfund Site Score</strong>'];
+              
+          // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < scores.length; i++) {
+                
+                labels.push(
+                  '<i style="background:' + 
+                  get_superfund_color(statuses[i], scores[i] + 1) +
+                   '"></i> ' + col_labs[i]
+                );
+                  
+            }
+            
+            div.innerHTML = labels.join('<br>');
+            return div;
+          
+        };
+        
+        // Brownfield location -----------------------------------------------
+
+        function create_triangle_icon (feature, latlng) {
+          let triangle_icon = L.icon({
+            iconUrl: 'icons/brownfields_triangle.svg',
+            iconSize:     [10, 10], // width and height of the image in pixels
+            iconAnchor:   [5, 4], // point of the icon which will correspond to marker's location
+          })
+          return L.marker(latlng, { icon: triangle_icon })
+        }
+
+        // create an options object that specifies which function will called on each feature
+        let brownfields_options = {
+          pointToLayer: create_triangle_icon
+        }
+
+        // create the GeoJSON layer
+        var brownfield_points = L.geoJSON(brownfields, brownfields_options)
+
+        // Mines --------------------------------------------------------------
+
+        function get_mine_color(product) {
+          return  product == 'Asbestos'         ? '#7dc2fffc':
+                  product == 'Chromium'         ? '#916eb0fc':
+                  product == 'Copper'           ? '#3b8a3bfc':
+                  product == 'Gold'             ? '#d4af37ff':
+                  product == 'Lead'             ? '#fffffffc':
+                  product == 'Mercury'          ? '#af3939fc':
+                  product == 'Mixed'            ? '#3676defc':
+                  product == 'Other Metal'      ? '#454545fc':
+                  product == 'Other Non-metal'  ? '#f8f6adfc': 
+                  product == 'Silver'           ? '#c0c0c0f2': 
+                  product == 'Clay or Stone'    ? '#d9a18ffc':
+                  product == 'Uranium'          ? '#cfff8bf2': 
+                                                  '#000000ff';
+
+
+        }
+
+        function get_mine_icon_path(product) {
+          return  product == 'Clay or Stone'   ? 'icons/stone.svg':
+                  product == 'Other Metal'     ? 'icons/other_metal.svg':
+                  product == 'Other Non-metal' ? 'icons/other_nonmetal.svg': 
+                                                 'icons/'.concat(product, '.svg');
+
+        }
+
+        function create_mine_icon(feature, latlng) {
+          let mine_icon = L.icon({
+            iconUrl: get_mine_icon_path(feature.properties.top_product),
+            iconSize:     [5, 5], // width and height of the image in pixels
+            iconAnchor:   [2, 2], // point of the icon which will correspond to marker's location
+          })
+
+          return L.marker(latlng, { icon: mine_icon })
+        }
+
+        // create an options object that specifies which function will called on each feature
+        let mine_options = {
+          pointToLayer: create_mine_icon,
+
+          //create superfund location pop-up
+          onEachFeature: function(feature, layer) {
+                layer.bindPopup("<u>USGS Past Mining Site</u>" +
+                                "<br><b>Name: </b>" + feature.properties.site_name + 
+                                "<br><b>Mine Products: </b>" + feature.properties.all_products +
+                                "<br><b>Site URL: </b>" + feature.properties.link);
+            }
+        }
+
+        // create the GeoJSON layer
+        var mine_points = L.geoJSON(mines, mine_options)
+
+        //create empty fire risk layer legend
+        var mine_legend = L.control({position: 'bottomleft'});
+        
+        //add colors, levels, and title to fire risk legend
+        mine_legend.onAdd = function(map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+              levels = ['Asbestos', 'Chromium','Copper','Gold','Lead','Mercury',
+                        'Mixed', 'Other Metal', 'Other Non-metal', 'Silver', 
+                        'Clay or Stone', 'Uranium'],
+              labels = ['<strong>Mine Products</strong>'];
+              
+          // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < levels.length; i++) {
+                
+                labels.push(
+                  '<i style="background:' + get_mine_color(levels[i]) + 
+                  '"></i> ' + levels[i] 
+                );
+                  
+            }
+            
+            div.innerHTML = labels.join('<br>');
+            return div;
+          
+        }; 
+
+
+        // Mercury Impacted Waterways -----------------------------------------
+
+        function get_hg_color(v) {
+          return v == 'Contains mercury' ? "#9e1c1c":
+                                           "#005bbd"; 
+        }
+
+        function hg_line_style(feature) {
+          return {
+            color: get_hg_color(feature.properties.hg_status),
+            weight: 1.5
+          }
+        }
+
+        var hg_line_layer = L.geoJSON(hg_lines, {style: hg_line_style})
+        
+        function hg_poly_style(feature) {
+          return {
+            color: get_hg_color(feature.properties.hg_status),
+            weight: 1.5,
+            fillColor: get_hg_color(feature.properties.hg_status),
+            fillOpacity: 0.9
+
+          }
+        }
+        var hg_poly_layer = L.geoJSON(hg_polys, {style: hg_poly_style})
+
+        var hg_layer = L.layerGroup([hg_line_layer, hg_poly_layer])
+
+        //create empty mercury impacted waterways group layer legend
+        var hg_legend = L.control({position: 'bottomleft'});
+        
+        //add colors, levels, and title to impacted waterways group layer legend
+        hg_legend.onAdd = function(map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+              hg_statuses = ['Contains mercury', 'No mercury detected']
+              title = ['<strong>Mercury Status</strong>'];
+              
+          // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < hg_statuses.length; i++) {
+                
+              title.push(
+                 '<i style="background:' + get_hg_color(hg_statuses[i]) + 
+                  '"></i> ' + hg_statuses[i]
+                );
+                  
+            }
+            
+            div.innerHTML = title.join('<br>');
+            return div;
+          
+        };
+
+        // Transit ------------------------------------------------------------
+        
+        var transit_lines = L.geoJSON(transit, {
+          color: "#444444",
+          weight: 1,
+          
+          onEachFeature: function(feature, layer) {
+            layer.bindPopup("<u>Transit Line</u>" +
+                            "<br><b>Type: </b>" + feature.properties.route_type_name + 
+                            "<br><b>Agency: </b>" + feature.properties.agency)
+          } 
+        })
+        
+        // North State Boundary -----------------------------------------------
+        
+        var north_state_layer = L.geoJSON(north_state, {color:'black'})
+
+        // Boundaries for all regions -----------------------------------------
+        function regions_style() {
+          return {
+            color: "black",
+            weight: 2,
+            dashArray: "2 6"
+          };
+        }
+        
+        var regions_layer = L.geoJSON(regions, {style: regions_style()})
+                
+        //Layer Visibility Control --------------------------------------------
+        
+        //basemap options
+        var base_maps = {
+          "USGS Topographic Map": USGS_USTopo
+		  //"OpenStreetMap": osm_basemap //,
+          //"OpenStreetMap Topo": osm_topo
+        };
+		
+		
+        
+        //layer options
+        var overlay_maps = {
+          "North State Region": north_state_layer,
+          "CA Jobs First Economic Regions": regions_layer,
+          "Federal Tribal Land": tribal_layer,
+          "Federal Tribal Boundaries": tribal_lines,
+          "High Native Population": native_layer,
+          "High Native Population Boundaries": native_lines,
+          "Fire Risk": fire_layer,
+          "High Poverty Areas": poverty_layer,
+          "Primary Care Provider Shortage": pc_layer,
+          "Heating Fuel Sources": fuel_layer,
+          "Mercury Impacted Waterways": hg_layer,
+          "Superfund Sites": superfund_points,
+          "Brownfields Sites": brownfield_points,
+          "Abandoned Mines": mine_points,
+          "Transit Lines": transit_lines
+        };
+        
+        var options = {
+          collapsed: false
+        };
+        
+        // create layer control menu
+        var layerControl = L.control.layers(null, 
+                                            overlay_maps, 
+                                            options).addTo(ejmap);
+        
+        
+        // Add Elements to Map ------------------------------------------------
+        //these elements will be checked by default if they are in the 
+        //overlay_maps variable
+        
+        //fire risk layer and legend
+        fire_layer.addTo(ejmap);
+        fire_legend.addTo(ejmap);
+
+        //Indigenous land
+        native_lines.addTo(ejmap);
+        tribal_lines.addTo(ejmap);
+        indigenous_legend.addTo(ejmap);
+
+        //primary care layer and legend
+        //pc_layer.addTo(ejmap);
+        //pc_legend.addTo(ejmap);
+
+        //Fuel layer
+        //fuel_layer.addTo(ejmap);
+        //fuel_legend.addTo(ejmap);
+
+        //Superfund sites
+        //superfund_points.addTo(ejmap);
+        //superfund_legend.addTo(ejmap);
+
+        //brownfield sites
+        //brownfield_points.addTo(ejmap)
+
+        //Mines
+        //mine_points.addTo(ejmap)
+        //mine_legend.addTo(ejmap)
+
+        //Transit lines
+        //transit_lines.addTo(ejmap);
+
+        //Mercury Impacted waterways
+        //hg_layer.addTo(ejmap);
+        //hg_legend.addTo(ejmap);
+        
+        //North State Region boundary
+        north_state_layer.addTo(ejmap);
+        regions_layer.addTo(ejmap);
+
+        //Event Handlers ------------------------------------------------------
+        
+        const indigenous_names = [
+          "Federal Tribal Land", "Federal Tribal Boundaries",
+          "High Native Population", "High Native Population Boundaries"
+        ]
+
+        //What happens when a layer gets added
+        ejmap.on('overlayadd', function(eventLayer){
+
+          if (eventLayer.name === 'Fire Risk'){ 
+              ejmap.addControl(fire_legend); 
+
+          } else if (eventLayer.name === "High Poverty Areas") {
+              ejmap.addControl(pov_legend);
+
+          } else if (eventLayer.name === "Primary Care Provider Shortage") {
+              ejmap.addControl(pc_legend);
+
+          } else if (eventLayer.name == "Heating Fuel Sources") {
+            ejmap.addControl(fuel_legend);
+
+          } else if (indigenous_names.includes(eventLayer.name)) {
+
+              ejmap.addControl(indigenous_legend); 
+
+          } else if (eventLayer.name === "Mercury Impacted Waterways") {
+            ejmap.addControl(hg_legend);
+
+          } else if (eventLayer.name === "Abandoned Mines") {
+            ejmap.addControl(mine_legend);
+            
+          }  else if (eventLayer.name === "Superfund Sites") {
+              ejmap.addControl(superfund_legend);
+
+          }
+
+          if (ejmap.hasLayer(transit_lines)) {
+            transit_lines.bringToFront()
+          }
+
+          if (ejmap.hasLayer(hg_line_layer)) {
+            hg_line_layer.bringToFront()
+          }
+
+          if (ejmap.hasLayer(native_lines)) {
+            native_lines.bringToFront()
+            tribal_lines.bringToFront()
+          }
+
+
+          if (ejmap.hasLayer(superfund_points)) {
+            superfund_points.bringToFront()
+          }
+
+          
+
+          north_state_layer.bringToFront()
+        }); 
+        
+        //what happens when a layer gets removed
+        ejmap.on('overlayremove', function(eventLayer){
+          if (eventLayer.name === 'Fire Risk'){
+               ejmap.removeControl(fire_legend);
+
+          } else if (eventLayer.name === "High Poverty Areas") {
+              ejmap.removeControl(pov_legend);
+
+          } else if (eventLayer.name === "Primary Care Provider Shortage") {
+              ejmap.removeControl(pc_legend);
+              
+          } else if (eventLayer.name === "Heating Fuel Sources") {
+              ejmap.removeControl(fuel_legend);
+              
+          }  else if (indigenous_names.includes(eventLayer.name)) {
+
+            const is_indigenous = [ejmap.hasLayer(tribal_layer), 
+                                   ejmap.hasLayer(tribal_lines),
+                                   ejmap.hasLayer(native_layer),
+                                   ejmap.hasLayer(native_lines)];
+
+            const layer_count = is_indigenous.filter(Boolean).length;
+
+            if(layer_count==0) {
+              ejmap.removeControl(indigenous_legend); 
+            }
+
+            } else if (eventLayer.name === "Superfund Sites") {
+              ejmap.removeControl(superfund_legend);
+
+          } else if (eventLayer.name === "Mercury Impacted Waterways") {
+            ejmap.removeControl(hg_legend);
+
+          } else if (eventLayer.name === "Abandoned Mines") {
+            ejmap.removeControl(mine_legend);
+
+          }
+
+        });
+  
+    </script>
+	
+	<h2>Learn More About this Project</h2>
+
+<p>Click the sections below to learn more about each topic.</p>
+
+<button type="button" class="collapsible">Navigating this Map</button>
+<div class="content">
+  <p>
+     Many of the data layers in this map (listed below) include information that
+     displays upon clicking on a particular element of the map. <u>In order for
+     a layer to be clickable, it must be displayed at the top layer of the
+     map.</u> If you are unable to click on a layer of interest to you, toggle
+     that layer off and on again in the Layer Selection Display at the upper
+     righthand corner of the map.
+  </p>
+
+<ul>
+  <li>Federal Tribal Land</li>
+  <li>Federal Tribal Boundaries</li>
+  <li>Primary Care Provider Shortage</li>
+  <li>Heating Fuel Sources</li>
+  <li>Superfund Sites</li>
+  <li>Abandoned Mines</li>
+  <li>Transit Lines</li>
+
+</ul>
+
+</div>
+
+
+
+<button type="button" class="collapsible">Purpose and Mapmaking Process</button>
+  <div class="content">
+    <p>
+      California’s North State Region faces unique challenges due to its rural 
+      character, isolated and rugged terrain, and distinctive economic profile. 
+      The purpose of this map is to provide a publically-available tool to 
+      highlight some issues critical to understanding environmental justice and 
+      injustice in the North State Region that may be overlooked in other 
+      environmentally focused maps. The region and its communities also have 
+      many strengths. Although these strengths are not included in the map, it 
+      is important to frame any decision-making on both strengths and needs as 
+      well as to take into consideration any limitations of the datasets 
+      included in this tool. Please see the About the Data section, below, for 
+      further details.
+    </p>
+
+    <p>
+      The boundaries of the  North State region of focus were predetermined 
+      following the state’s 
+      <a href="https://www.labor.ca.gov/regional-investment-initiative/">
+        California Jobs First program</a>. 
+      The North State Region counties include Butte, Glenn, Lassen, Modoc, 
+      Plumas, Shasta, Sierra, Siskiyou, Tehama, and Trinity.
+    </p>
+
+    <p>
+      Funding for this project came from the California Jobs First Regional
+      Investment Initiative (formerly the Community Economic Resilience Fund, or
+      CERF) via one of the North State Region’s two co-convenors, the Sierra
+      Institute for Community and Environment. The Sierra Institute
+      subcontracted the UC Davis Institute of the Environment’s Environmental
+      and Climate Justice Hub to support their North State efforts, which in
+      turn requested participation from the UC Davis DataLab.
+
+    </p>
+  </div>
+
+
+  <button type="button" class="collapsible">California Jobs First</button>
+  <div class="content">
+    <p>
+      California Jobs First is a $600 million fund to build a sustainable and
+      equitable economy across California, with a focus on supporting new
+      strategies to diversify local economies and develop industries that create
+      high-quality, broadly accessible jobs for all Californians in the
+      transition to a carbon-neutral economy. 
+    </p>
+    <blockquote cite="https://www.labor.ca.gov/regional-investment-initiative/">
+      “Over the last few decades, economic wealth generated in California has
+      not been shared equally, with many communities and families feeling the
+      squeeze of low-paying jobs and rising costs. At the same time, California
+      is on an accelerated path to transition to a clean energy economy, with
+      the goal of reaching carbon neutrality by 2045. The goal of the Regional
+      Investment Initiative is to ensure that as California’s economy grows and
+      adapts to climate change and other challenges, that good-paying jobs and
+      prosperous communities are created for the benefit of all Californians.
+      Key to the program is empowering the state’s diverse regions and residents
+      to meaningfully participate as leaders in this process.” – 
+      <a href="https://www.labor.ca.gov/regional-investment-initiative/">
+        California Jobs First Regional Investment Initiative</a> 
+
+    </blockquote>
+
+  </div>
+
+<button type="button" class="collapsible">About the Data</button>
+<div class="content">
+
+  <h3>General Information</h3>
+
+    <p>
+      All of the datasets used to create this map are either statewide or
+      national, so while this map was created to focus on these issues for the
+      North State Region, it also includes optional boundary lines view showing
+      all 13 of the regions designated by California Jobs First, see the 
+      <b>California Jobs First</b> tab for more details.
+    </p>
+
+  <p>
+    Many of the map layers presented here were derived from census data. Except
+    where noted, these data came from the 2022 American Community Survey 5-Year
+    data and geographies.
+  </p>
+
+  <p>
+    Some map layers display additional information when clicked on. These
+    include: Federal Tribal Land and Federal Tribal Boundaries, Primary Care
+    Provider Shortage, Heating Fuel Sources, Superfund Sites, Abandoned Mines,
+    and Transit Lines.
+  </p>
+
+  <h3>North State Region</h3>
+  
+  <p>
+    This layer outlines the 10-county inland North State region, which includes
+    the following counties: Butte, Glenn, Lassen, Modoc, Plumas, Shasta, Sierra,
+    Siskiyou, Tehama, and Trinity.
+  </p>
+  
+  <p class="hangingindent" id="citation">
+    U.S. Census Bureau. (2022). tl_2022_us_county. <i>TIGER/Line Shapefiles.</i> 
+    Retrieved on August 6, 2024, from 
+    <a href="https://www2.census.gov/geo/tiger/TIGER2022/COUNTY/">
+      https://www2.census.gov/geo/tiger/TIGER2022/COUNTY/ </a> via the tigris 
+      R package.
+  </p>
+
+  <h3>California Jobs First Economic Regions</h3>
+
+  <p>
+    This layer contains the outlines for the 13 economic regions of California
+    as defined by the California Jobs First Regional Investment Initiative,
+    listed below. For more information, see the <b>California Jobs First</b>
+    tab.
+  </p>
+
+  <ul>
+    <li><b>North State</b> – Butte, Glenn, Lassen, Modoc, Plumas, Shasta, Sierra, Siskiyou, Tehama, Trinity</li>
+    <li><b>Redwood Coast</b> – Del Norte, Humboldt, Lake, Mendocino</li>
+    <li><b>Capital</b> – Colusa, El Dorado, Nevada, Placer, Sacramento, Sutter, Yolo, Yuba</li>
+    <li><b>Bay Area</b> – Alameda, Contra Costa, Marin, Napa, San Francisco, San Mateo, Santa Clara, Solano, Sonoma</li>
+    <li><b>Eastern Sierra</b> – Alpine, Amador, Calaveras, Inyo, Mariposa, Mono, Tuolumne</li>
+    <li><b>Northern San Joaquin Valley</b> – Merced San Joaquin, Stanislaus</li>
+    <li><b>Central San Joaquin Valley</b> – Fresno, Kings, Madera, Tulare</li>
+    <li><b>Central Coast</b> – Monterey, San Benito, Santa Barbara, Santa Cruz, San Luis Obispo, Ventura</li>
+    <li><b>Kern County</b></li>
+    <li><b>Los Angeles County</b></li>
+    <li><b>Orange County</b></li>
+    <li><b>Inland Empire</b> – Riverside, San Bernardino</li>
+    <li><b>Southern Border</b> – Imperial, San Diego</li>
+  </ul> 
+
+  <p class="hangingindent" id="citation">
+    U.S. Census Bureau. (2022). tl_2022_us_county. <i>TIGER/Line Shapefiles.</i> 
+    Retrieved on August 6, 2024, from 
+    <a href="https://www2.census.gov/geo/tiger/TIGER2022/COUNTY/">
+      https://www2.census.gov/geo/tiger/TIGER2022/COUNTY/ </a> via the tigris 
+      R package.
+  </p>
+
+  <h3>Federally Recognized Tribal Land and Boundaries</h3>
+
+  <p>
+    These layers show the areas the federal government recognizes as Tribal
+    Lands in California according to the US Census Bureau. It includes both
+    American Indian Reservations and Trust Lands. The Federal Tribal Lands layer
+    shows these areas shaded in. The Federal Tribal Boundaries layer only
+    includes the area outlines so that users can access information about other
+    layers via pop-ups. For more information see
+    <a href="https://www2.census.gov/geo/pdfs/reference/GARM/Ch5GARM.pdf">
+      American Indian and Alaska Native Areas</a>.
+  </p>
+
+  <p class="hangingindent" id="citation">
+    U.S. Census Bureau. (2022). tl_2022_us_aiannh. <i>TIGER/Line Shapefiles. </i>
+    Retrieved on September 26, 2024, from 
+    <a href="https://www2.census.gov/geo/tiger/TIGER2022/AIANNH/">
+      https://www2.census.gov/geo/tiger/TIGER2022/AIANNH/
+    </a> via the tigris R package.
+  </p>
+
+
+  <h3>High Native Population and Boundaries</h3>
+
+  <p>
+    The High Native Population and High Native Population Boundaries layers
+    display the top 10% of census tracts by Native identifying population by
+    percentage. This includes people who identify as American Indian or Native
+    Alaskan alone, or in addition to some other race. The High Native Population
+    layer shows areas with a high percentage of Native identifying people shaded
+    in. The High Native Population Boundaries layer only includes the outlines
+    so that users can access information about other layers via pop-ups.
+  </p> 
+
+  <p class="hangingindent" id="citation"> 
+    U.S. Census Bureau. (2022). B02010 - American Indian and 
+    Alaska Native Alone or in Combination With One or More Other Races. 
+    <i>American Community Survey: 5-Year Estimates: Detailed Tables 5-Year. </i> 
+    Retrieved on August 9, 2024 from 
+    <a href="http://api.census.gov/data/2022/acs/acs5/groups/B02010">
+      http://api.census.gov/data/2022/acs/acs5/groups/B02010
+    </a> via the tidycensus R package.
+  </p>
+
+
+  <h3>Fire Risk</h3>
+
+  <p>
+    The Fire Risk data layer represents the maximum probability of a fire over
+    10 years for a given census tract or block group. Only areas with at least a
+    20% chance of a fire in the next 10 years are displayed. For more
+    information see <a
+    href="http://pyrologix.com/reports/Contemporary-Wildfire-Hazard-Across-California.pdf">Contemporary
+    Wildfire Hazard Across California</a>.
+  </p>
+
+  <p class="hangingindent" id="citation">
+    Pyrologix, LLC. (2022). Annual Burn Probability. <i>Contemporary Wildfire 
+      Across California.</i> Retrieved on September 25, 2024, from 
+      <a href="https://caregionalresourcekits.org/statewide.html#fire_dyn">
+        https://caregionalresourcekits.org/statewide.html#fire_dyn
+      </a>.
+  </p>
+
+  <h3>High Poverty Areas</h3>
+
+  <p>
+    The layer shows the census tracts where the U.S. Census estimates more than
+    20% of the population were living below the poverty line in 2022. It also
+    shows census tracts where the upper 90% confidence interval of people living
+    below the poverty line is at least 20%.
+  </p>
+
+  <p class="hangingindent" id="citation"> 
+    U.S. Census Bureau. (2022). S1701 - Poverty Status in the Past 12 Months. 
+    <i>American Community Survey: 5-Year Estimates: Subject Tables 5-Year. </i> 
+    Retrieved on August 14, 2024, from 
+    <a href="http://api.census.gov/data/2022/acs/acs5/subject/groups/S1701">
+      http://api.census.gov/data/2022/acs/acs5/subject/groups/S1701
+    </a> via the tidycensus R package.
+  </p>
+
+  <h3>Primary Care Provider Shortage</h3>
+
+  <p>
+    The Health Resources and Services Administration (HRSA) designated Health
+    Professional Shortage Areas (HPSAs), places where there are sufficient
+    healthcare workers to meet the demand for medical care. This layer displays
+    areas where there are not enough primary care providers to serve the
+    population. Areas with a solid fill have primary care provider shortages for
+    the entire population. Areas with a striped fill are experiencing a primary
+    care provider shortage for a subset of their population (ex. people on
+    medicaid). A pop-up window for each area states which specific populations
+    are indicated. 
+  </p>
+
+  <p>
+    The Provider Shortage Score (or HPSA Score) is a score developed by the
+    National Health Service Corps for determining priorities when assigning
+    clinicians. It ranges from 0-26, where higher scores denote higher priority.
+  </p>
+
+  <p class="hangingindent" id="citation">
+    Health Resources and Services Administration. (2024). Area HPSA Designation 
+    Boundaries – SHP. <i>Health Professional Shortage Areas - Primary Care.</i>
+    Retrieved on October 4, 2024, from 
+    <a href="https://data.hrsa.gov/data/download">https://data.hrsa.gov/data/download</a>.
+  </p>
+
+  <h3>Heating Fuel Sources</h3>
+
+  <p>
+    While the vast majority of fuel sources people use to heat their homes
+    release greenhouse gasses (carbon dioxide), some sources emit additional
+    pollutants, such as carbon monoxide, nitrogen dioxide, particulate matter,
+    and volatile organic compounds. The highest fuel emitters are coal, coke,
+    fuel oil, kerosene, and wood (Mahmoud et al. 2021, California Air Resources
+    Board). This layer shows the percentage of households that use one of these
+    high pollutant fuel sources to heat their home. 
+  </p>
+
+  <p class="hangingindent" id="citation">
+    California Air Resources Board. (n.d.). <i>Combustion Pollutants &amp;
+    Indoor Air Quality</i>. Retrieved September 27, 2024, from <a
+    href="https://ww2.arb.ca.gov/resources/documents/combustion-pollutants-indoor-air-quality">
+    https://ww2.arb.ca.gov/resources/documents/combustion-pollutants-indoor-air-quality</a>
+  </p>
+
+  <p class="hangingindent" id="citation">
+    Mahmoud, M., Ramadan, M., Naher, S., Pullen, K., &amp; Olabi, A.-G. (2021).
+    The impacts of different heating systems on the environment: A review.
+    <i>Science of The Total Environment</i>, <i>766</i>, 142625. <a
+    href="https://doi.org/10.1016/j.scitotenv.2020.142625">https://doi.org/10.1016/j.scitotenv.2020.142625</a>
+
+  <p class="hangingindent" id="citation">
+    U.S. Census Bureau. (2022). B25040 - House Heating Fuel. <i>American
+    Community Survey: 5-Year Estimates: Detailed Tables 5-Year. </i> 
+    Retrieved August 9, 2024, from <a
+    href="http://api.census.gov/data/2022/acs/acs5/groups/B25040">
+      http://api.census.gov/data/2022/acs/acs5/groups/B25040
+    </a> via the tidycensus R package.
+  </p>
+
+  <h3>Mercury Impacted Waterways</h3>
+
+  This data layer displays waterways documented by the California State Water
+  Control Board to be impacted by mercury contamination. Impacted waterways can 
+  include rivers, streams, lakes, reservoirs and estuaries. For more 
+  information, see the California Water Boards'
+  <a href="https://www.waterboards.ca.gov/water_issues/programs/water_quality_assessment/">
+    Water Quality Assessment Program
+  </a>.
+
+  <p class="hangingindent" id="citation">
+    State Water Resources Control Board Division of Water. (2022). <i>2020-2022 
+    California Integrated Report.</i> Retrieved from 
+    <a href="https://www.waterboards.ca.gov/water_issues/programs/water_quality_assessment/2020_2022_integrated_report.html">
+      https://www.waterboards.ca.gov/water_issues/programs/water_quality_assessment/2020_2022_integrated_report.html
+    </a>.
+
+  </p>
+
+  <h3>Superfund Sites</h3>
+
+  <p>
+    The Superfund Site layer contains locations for known or threatened releases
+    of hazardous substances, pollutants, or contaminants throughout California
+    that are considered the highest priority for remediation by the
+    Environmental Protection Agency (EPA). These include manufacturing
+    facilities, processing plants, landfills, or mining locations. The EPA
+    evaluates each reported site based on (1) the relative potential of
+    substances to cause a hazardous situation (2) the likelihood and rate at
+    which the substances may affect human and environmental receptors and (3)
+    the severity and magnitude of potential effects. It then gives the site a
+    Hazard Ranking System (HRS) site score, which can range from 0-100.
+    Locations with an HRS score of more than 28.5 get added to the Superfund
+    National Priority List (NPL) for remediation.
+  </p>
+
+  <p class="hangingindent" id="citation">
+    U.S. Environmental Protection Agency. (2024). <i>Superfund National
+    Priorities List (NPL) Sites with Status Information.</i> Retrieved on
+    October 2, 2024, from 
+    <a href="https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Superfund_National_Priorities_List_(NPL)_Sites_with_Status_Information/FeatureServer">
+      https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Superfund_National_Priorities_List_(NPL)_Sites_with_Status_Information/FeatureServer
+    </a>.
+  </p>
+
+  <h3>Brownfields Sites</h3>
+
+  <p>
+    Brownfield Sites are areas where redevelopment or reuse of the site may be
+    complicated by the presence or potential presence of a hazardous substance,
+    pollutant, or contaminant. The Environmental Protection Agency (EPA)
+    provides funding to local governments to defray the cost of environmental
+    remediation necessary before land can be redeveloped. For more information,
+    see the EPA’s 
+    <a href="https://www.epa.gov/brownfields/about">
+      Brownfields Program website
+    </a>.
+  </p>
+
+  <p class="hangingindent" id="citation">
+    U.S. Environmental Protection Agency. (2024). <i>Facility Registry Service
+    Geodatabase: ACRES layer.</i> Retrieved on October 4, 2024, from 
+    <a href="https://www.epa.gov/frs/geospatial-data-download-service">
+      https://www.epa.gov/frs/geospatial-data-download-service
+    </a>.
+  </p>
+
+  <h3>Abandoned Mines</h3>
+
+  <p>
+    This layer contains point locations for out of use mines and other sites of
+    past mineral production in California, based on the U.S. Geological Survey’s
+    (USGS) Mineral Resources Data System (MRDS). Mines are colored based on the
+    highest risk commodity they produced, but all major products are listed in a
+    pop-up window. Because the MRDS contains information from sources of varying
+    qualities, individual observations are graded in quality from A (highest) to
+    E (lowest). This map only includes observations with quality grades from A
+    to C, as observations from grades D and E are generally missing critical
+    information.
+  </p>
+
+  <p class="hangingindent" id="citation">
+    U.S. Geological Survey. (2016). Mineral Resources Data System (MRDS). 
+    Retrieved on October 4, 2024, from 
+    <a href="https://mrdata.usgs.gov/mrds/geo-inventory.php">
+      https://mrdata.usgs.gov/mrds/geo-inventory.php
+    </a>.
+  </p>
+
+
+  <h3>Transit Lines</h3>
+
+  <p>
+    This layer contains route lines for all mass transit in the state of
+    California. The California Department of Transit (
+    <a href="https://dot.ca.gov/">Caltrans</a>) collects General
+    Transit Feed Specification (GTFS) data from all mass transit operators in
+    California, both public and private. The purpose of including this dataset
+    is to provide a commonly understood reference at a regional scale, not to
+    act as a trip planning guide.
+
+  </p>
+
+  <p class="hangingindent" id="citation">
+    California Department of Transportation. (2024). <i>CA Transit Routes</i>.
+    Retrieved on October 15, 2024, from
+    <a href="https://gis.data.ca.gov/datasets/dd7cb74665a14859a59b8c31d3bc5a3e_0/about">
+      https://gis.data.ca.gov/datasets/dd7cb74665a14859a59b8c31d3bc5a3e_0/about
+    </a>.
+  </p>
+
+</div>
+
+<button type="button" class="collapsible">Other Resources</button>
+<div class="content">
+
+  <p>
+    There are many publically available tools to help researchers with
+    geospatial investigations of environmental justice issues. A few of them
+    are listed below.
+  </p>
+
+  <ul>
+    <li>Desktop GIS (<a href="https://datalab.ucdavis.edu/geospatial/">Toolkit</a>,
+      <a href="https://ucdavisdatalab.github.io/Intro-to-Desktop-GIS-with-QGIS/">Workshop</a>) </li>
+    <li><a href="https://healthatlas.ucsf.edu/">UCSF Health Atlas Interactive Map</a></li>
+    <li><a href="https://ejscreen.epa.gov/mapper/">EJScreen: Environmental Justice Screening and Mapping Tool</a> </li>
+    <li><a href="https://www.planscape.org/">Planscape Decision Support Tool</a></li>
+    <li>
+      The National Academies of Sciences, Engineering, and Medicine’s Consensus 
+      Study Report, 
+      <a href="https://nap.nationalacademies.org/catalog/27317/constructing-valid-geospatial-tools-for-environmental-justice">
+         Constructing Valid Geospatial Tools for Environmental Justice (2024)</a>, 
+         which “provides a conceptual framework and data strategy 
+         recommendations for developing the composite indicators that are the 
+         heart of geospatial EJ tools.”
+    </li>
+
+  </ul>
+</div>
+
+<button type="button" class="collapsible">Contact Us</button>
+<div class="content">
+  <p>
+    Because the map display is interactive and customizable to a viewer's needs 
+    and interests, we hope that this map will provide deeper insights into 
+    areas of need and spark ideas for solutions. As members of the public use 
+    this tool, we invite feedback, ideas, and requests for future iterations.
+    Please reach out to us via email at 
+    <a href="mailto:brmiddleton@ucdavis.edu">brmiddleton@ucdavis.edu</a>. 
+    We look forward to hearing how you use this tool!
+  </p>
+</div>
+
+<button type="button" class="collapsible">About the Team</button>
+<div class="content">
+  <h3><a href="https://datalab.ucdavis.edu/">UC Davis DataLab</a></h3>
+  Roles: Mapping Project Co-Design, Dataset Collection, Web Map Creation
+  <ul>
+    <li>Elise Hellwig, Data Scientist</li>
+    <li>Michele Tobias, Geospatial Data Scientist</li>
+    <li>Meya Zagar, Student Employee</li>
+  </ul>
+
+
+  <h3><a href="https://environment.ucdavis.edu/">UC Davis Institute for the Environment</a></h3>
+  Roles: Mapping Project Initiators and Co-Design, University Partner of the
+  Sierra Institute
+  <ul>
+    <li>Beth Rose Middleton, Professor of Native American Studies, Associate
+      Director of the 
+      <a href="https://environment.ucdavis.edu/environmental-and-climate-justice-hub">
+        Environmental and Climate Justice Hub
+      </a>
+    </li>
+    <li>Alyssa A. Nelson, Researcher, Rural Environmental Justice Program 
+      Director</li>
+  </ul>
+
+  <h3><a href="https://sierrainstitute.us/">Sierra Institute for Community and Environment</a></h3>
+  <p>Roles: Funder, Nonprofit Community Partner</p>
+  <ul>
+    <li>Jonathan Kusel, Executive Director</li>
+    <li>Zoe Watson, Rural Community Development Program Manager</li>
+  </ul>
+
+
+</div>
+
+<script>
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.display === "block") {
+      content.style.display = "none";
+    } else {
+      content.style.display = "block";
+    }
+  });
+}
+
+</script>
+
+</body>
+
+
+
+
+
+</html>
